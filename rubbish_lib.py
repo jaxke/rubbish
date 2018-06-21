@@ -103,6 +103,11 @@ def bin_contents():
     except FileNotFoundError:
         return
 
+def empty_bin():
+    import shutil
+    shutil.rmtree(get_bin())
+    open(LOG, "w").close()
+
 
 def restore_by_filename(files):
     files_restored = 0
@@ -137,7 +142,5 @@ def restore(file_to_restore):
                 os.rename(get_bin() + str(file_id), file_to_restore)
                 mark_restoration(file_id)
                 return True
-            except FileNotFoundError as e:
-                ex, val, tb = sys.exc_info()
-                #traceback.print_exception(ex, val, tb)
+            except FileNotFoundError:
                 print("File was not found in the bin.")

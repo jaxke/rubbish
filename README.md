@@ -27,4 +27,4 @@ Restored 2 out of 2 files.
 ```  
 
 ## TODO
-[ ] Configuration file and additional functionality like bin max size
+- [ ] Configuration file and additional functionality like bin max size

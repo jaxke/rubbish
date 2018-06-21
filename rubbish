@@ -43,7 +43,6 @@ def rubbish_restore(files):
             print("You must specify an absolute path or provide the id of the file(rubbish-list)")
             return
 
-    # TODO This is much more trivial as user has to command abs paths!
     isnumeric = True
     for file in files:
         if not file.isnumeric():
@@ -65,6 +64,10 @@ def rubbish_usage():
     print("Usage: rubbish put|restore|list [args]")
 
 
+def rubbish_empty():
+    ret = rubbish.empty_bin()
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         print_usage()
@@ -77,6 +80,8 @@ if __name__ == "__main__":
         rubbish_list()
     elif cmd == "restore":
         rubbish_restore(func_args)
+    elif cmd == "empty":
+        rubbish_empty()
     elif cmd == "help":
         print_usage()
     else:
