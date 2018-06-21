@@ -7,6 +7,9 @@ import time
 import json
 import traceback
 
+'''
+Library of functions used by the wrapper script
+'''
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__)) + "/"
 BIN = SRC_DIR + "bin/"
@@ -18,25 +21,37 @@ if __name__ == "__main__":
     sys.exit(1)
 
 
+# Return bin directory size
+def get_bin_size():
+    return subprocess.check_output(['du','-sh', get_bin()]).split()[0].decode('utf-8')
+
+
+# Make sure dir exists each time it is accessed
+def get_bin():
+    if not os.path.isdir(BIN):
+        os.mkdir(BIN)
+    return BIN
+
+
+# Files are stored as incrementing integers as id, this function finds the last
+# id and the function calling it will increment it if it is mv'ing another file
 def get_last_id():
-    ls = sorted(os.listdir(BIN))
+    ls = sorted(os.listdir(get_bin()))
     if len(ls) == 0:
         return 0
     for f in reversed(ls):
-        if f.isnumeric():
+        if f.isnumeric():   # Make sure to skip files that are put there by accident
             return int(f)
 
 
-def rm(files, curr_dir):
+def rm(files):
     del_count = 0
-    if not os.path.isdir(BIN):
-        os.mkdir(BIN)
     for file in files:
+        # If argument is not an abs path user is trying to put a file into bin from cwd
         if file[0] not in ["~", "/"]:
-            file = curr_dir + "/" + file
-        filename = file.split("/")[-1]
+            file = os.getcwd() + "/" + file
         try:
-            ret_mv = os.rename(file, BIN + str(get_last_id() + 1))
+            ret_mv = os.rename(file, get_bin() + str(get_last_id() + 1))
             mark_deletion(file)
             del_count += 1
         except FileNotFoundError:
@@ -44,17 +59,20 @@ def rm(files, curr_dir):
     return del_count
 
 
+# Write data to JSON so the program can keep track of it
 def mark_deletion(file):
     time_date = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-    open(LOG, "a").close()
+    open(LOG, "a").close()  # Make sure the LOG file exists(recreates it otherwise)
     with open(LOG, "r") as log_read:
         try:
             old_contents = json.load(log_read)
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError:    # Bad data
             old_contents = None
     with open(LOG, "w") as log_write:
+        # Format {"1": {filename: "/home/user/file", timedate: str(time_and_date)}}
         dump = {str(get_last_id()): {"filename": file, "timedate": time_date}}
         try:
+            # Merge new entry to the old JSON data(append to existing data)
             new_contents = dict(old_contents, **dump)
         # raises TypeError if old_contents == None
         except TypeError:
@@ -62,6 +80,7 @@ def mark_deletion(file):
         json.dump(new_contents, log_write)
 
 
+# Remove entry from JSON upon restoring files(JSON entries must be gone if files are removed from bin)
 def mark_restoration(file_id):
     del_id = ""
     with open(LOG, "r") as log_read:
@@ -73,7 +92,8 @@ def mark_restoration(file_id):
             break
     del json_contents[del_id]
     with open(LOG, "w") as log_write:
-        json.dump(json_contents, log_write)
+        json.dump(json_contents, log_write)  # Write data back to JSON(without the entry we just deleted)
+
 
 def bin_contents():
     try:
@@ -105,7 +125,7 @@ def restore_by_index(indexes):
         if file_to_restore:
             if restore(file_to_restore):
                 files_restored += 1
-        return files_restored
+    return files_restored
 
 
 def restore(file_to_restore):
@@ -114,7 +134,7 @@ def restore(file_to_restore):
         if files_in_bin[item]['filename'] == file_to_restore:
             file_id = item
             try:
-                os.rename(BIN + str(file_id), file_to_restore)
+                os.rename(get_bin() + str(file_id), file_to_restore)
                 mark_restoration(file_id)
                 return True
             except FileNotFoundError as e:
