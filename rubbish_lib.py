@@ -5,6 +5,7 @@ from pdb import set_trace as st
 import sys
 import time
 import json
+import traceback
 
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -20,10 +21,10 @@ if __name__ == "__main__":
 def get_last_id():
     ls = sorted(os.listdir(BIN))
     if len(ls) == 0:
-        return 1
+        return 0
     for f in reversed(ls):
         if f.isnumeric():
-            return int(f) + 1
+            return int(f)
 
 
 def rm(files, curr_dir):
@@ -35,8 +36,8 @@ def rm(files, curr_dir):
             file = curr_dir + "/" + file
         filename = file.split("/")[-1]
         try:
+            ret_mv = os.rename(file, BIN + str(get_last_id() + 1))
             mark_deletion(file)
-            ret_mv = os.rename(file, BIN + str(get_last_id()))
             del_count += 1
         except FileNotFoundError:
             print(file + " does not exist. Skipping.")
@@ -68,7 +69,7 @@ def mark_restoration(file_id):
     for item in json_contents:
         if item == file_id:
             # Can't del from within the loop that's iterating over it
-            del_id = json_contents[item]
+            del_id = item
             break
     del json_contents[del_id]
     with open(LOG, "w") as log_write:
@@ -116,8 +117,7 @@ def restore(file_to_restore):
                 os.rename(BIN + str(file_id), file_to_restore)
                 mark_restoration(file_id)
                 return True
-            except Exception as e: # # TODO
-                st()
-                print("Exception ", e)
-                return
-        print("File was not found in the bin. Check that your argument ")
+            except FileNotFoundError as e:
+                ex, val, tb = sys.exc_info()
+                #traceback.print_exception(ex, val, tb)
+                print("File was not found in the bin.")

@@ -15,7 +15,7 @@ def rubbish_put(files):
     print(ret, "out of", len(files), "files moved to bin.")
 
 
-def rubbis_list():
+def rubbish_list():
     files_in_bin = rubbish.bin_contents()
     if not files_in_bin:
         print("Bin is empty!")
@@ -29,12 +29,12 @@ def rubbish_restore(files):
         print("Usage: rubbish_restore [files] | [indexes]")
         return
 
-    if len(rubbish.bin_contents()) == 0:
+    if rubbish.bin_contents() == None:
         print("Bin is empty!")
         return
 
     for file in files:
-        if file[0] != "/" or not file.isnumeric():
+        if file[0] != "/" and not file.isnumeric():
             print("You must specify an absolute path or provide the id of the file(rubbish-list)")
             return
 
