@@ -61,16 +61,17 @@ def rubbish_restore(files):
 
 
 def rubbish_usage():
-    print("Usage: rubbish put|restore|list [args]")
+    print("Usage: rubbish put|restore|list|empty [args]")
 
 
 def rubbish_empty():
     ret = rubbish.empty_bin()
+    print("Bin is now empty.")
 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print_usage()
+        rubbish_usage()
         sys.exit(1)
     cmd = sys.argv[1]
     func_args = sys.argv[2:]
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         rubbish_restore(func_args)
     elif cmd == "empty":
         rubbish_empty()
-    elif cmd == "help":
-        print_usage()
+    elif cmd == "help" or cmd == "--help" or cmd == "-h":
+        rubbish_usage()
     else:
-        print("Invalid command")
+        print("Invalid command, use 'rubbish help' to see commands.")

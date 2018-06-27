@@ -42,6 +42,7 @@ def get_last_id():
     for f in reversed(ls):
         if f.isnumeric():   # Make sure to skip files that are put there by accident
             return int(f)
+    return 0
 
 
 def rm(files):
@@ -102,14 +103,18 @@ def bin_contents():
             return json_contents
     except FileNotFoundError:
         return
+    except json.decoder.JSONDecodeError:
+        print("JSON file is broken")
+        return
 
 def empty_bin():
     import shutil
-    shutil.rmtree(get_bin())
-    open(LOG, "w").close()
+    shutil.rmtree(get_bin())    # rm -r ./bin/
+    open(LOG, "w").close()      # rm ./.log
 
 
 def restore_by_filename(files):
+    # Count how many files were restored so calling function can report it to user
     files_restored = 0
     for file in files:
         if restore(file):
@@ -117,19 +122,19 @@ def restore_by_filename(files):
     return files_restored
 
 
-def restore_by_index(indexes):
+def restore_by_index(indices):
     files_restored = 0
     files_in_bin = bin_contents()
-    for index in indexes:
+    for index in indices:
         try:
+            # If files_in_bin[index] == None => raises TypeError when trying to
+            # None['filename'], should not happen though?
             file_to_restore = files_in_bin.get(index, None)['filename']
         except TypeError:
-            print("This file was not found in the bin") # This should not happen
+            print("This file was not found in the bin")
             return
-        # if file exists in bin
-        if file_to_restore:
-            if restore(file_to_restore):
-                files_restored += 1
+        if restore(file_to_restore):
+            files_restored += 1
     return files_restored
 
 
@@ -144,3 +149,4 @@ def restore(file_to_restore):
                 return True
             except FileNotFoundError:
                 print("File was not found in the bin.")
+                return
